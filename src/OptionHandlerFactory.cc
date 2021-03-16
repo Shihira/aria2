@@ -1539,6 +1539,12 @@ std::vector<OptionHandler*> OptionHandlerFactory::createOptionHandlers()
   }
   {
     OptionHandler* op(new DefaultOptionHandler(
+        PREF_BT_BLOCKED_PEER_ID_KEYWORDS));
+    op->addTag(TAG_BITTORRENT);
+    handlers.push_back(op);
+  }
+  {
+    OptionHandler* op(new DefaultOptionHandler(
         PREF_BT_LPD_INTERFACE, TEXT_BT_LPD_INTERFACE, NO_DEFAULT_VALUE,
         "interface, IP address", OptionHandler::REQ_ARG));
     op->addTag(TAG_BITTORRENT);

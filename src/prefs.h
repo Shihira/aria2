@@ -517,6 +517,8 @@ extern PrefPtr PREF_BT_FORCE_ENCRYPTION;
 extern PrefPtr PREF_BT_ENABLE_HOOK_AFTER_HASH_CHECK;
 // values: true | false
 extern PrefPtr PREF_BT_LOAD_SAVED_METADATA;
+// values: string
+extern PrefPtr PREF_BT_BLOCKED_PEER_ID_KEYWORDS;
 
 /**
  * Metalink related preferences

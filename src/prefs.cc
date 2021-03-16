@@ -566,6 +566,8 @@ PrefPtr PREF_BT_ENABLE_HOOK_AFTER_HASH_CHECK =
     makePref("bt-enable-hook-after-hash-check");
 // values: true | false
 PrefPtr PREF_BT_LOAD_SAVED_METADATA = makePref("bt-load-saved-metadata");
+// values: string
+PrefPtr PREF_BT_BLOCKED_PEER_ID_KEYWORDS = makePref("bt-blocked-peer-id-keywords");
 
 /**
  * Metalink related preferences

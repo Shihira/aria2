@@ -81,6 +81,7 @@
 #include "UTMetadataRequestFactory.h"
 #include "UTMetadataRequestTracker.h"
 #include "wallclock.h"
+#include "Option.h"
 
 namespace aria2 {
 
@@ -119,6 +120,49 @@ void DefaultBtInteractive::initiateHandshake()
   dispatcher_->sendMessages();
 }
 
+static std::string stringifyPeerId(const char* fst, const char* lst)
+{
+  std::string s;
+  for (const char* pc = fst; pc < lst; ++pc)
+  {
+    if (std::isprint(*pc))
+      s += *pc;
+    else
+      s += fmt("\\x%02x", ((unsigned int)*pc & 0xffu));
+  }
+  return s;
+}
+
+static bool isBlockedPeerId(const unsigned char* _peerId, const std::shared_ptr<Option>& op)
+{
+  const char* peerIdFst = reinterpret_cast<const char*>(_peerId);
+  const char* peerIdLst = peerIdFst + PEER_ID_LENGTH;
+
+  std::string keywords = op->get(PREF_BT_BLOCKED_PEER_ID_KEYWORDS);
+  auto subKeywordFst = keywords.begin(),
+       subKeywordLst = std::find(keywords.begin(), keywords.end(), '|');
+  while (subKeywordFst < keywords.end())
+  {
+    if (subKeywordFst == subKeywordLst)
+      continue;
+
+    auto keywordFoundInId = std::search(peerIdFst, peerIdLst, subKeywordFst, subKeywordLst);
+    if (keywordFoundInId != peerIdLst)
+    {
+      A2_LOG_NOTICE("Found a blocked peer id: " + stringifyPeerId(peerIdFst, peerIdLst));
+      return true;
+    }
+
+    if (subKeywordLst == keywords.end())
+      break;
+
+    subKeywordFst = subKeywordLst + 1;
+    subKeywordLst = std::find(subKeywordFst, keywords.end(), '|');
+  }
+  A2_LOG_NOTICE("Peer id unblocked: " + stringifyPeerId(peerIdFst, peerIdLst));
+  return false;
+}
+
 std::unique_ptr<BtHandshakeMessage>
 DefaultBtInteractive::receiveHandshake(bool quickReply)
 {
@@ -140,6 +184,11 @@ DefaultBtInteractive::receiveHandshake(bool quickReply)
   }
 
   peer_->setPeerId(message->getPeerId());
+
+  if (isBlockedPeerId(peer_->getPeerId(), downloadContext_->getOwnerRequestGroup()->getOption()))
+  {
+    throw DL_ABORT_EX("Client is blocked");
+  }
 
   if (message->isFastExtensionSupported()) {
     peer_->setFastExtensionEnabled(true);
